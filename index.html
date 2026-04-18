@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赵正海 - 机器人控制 × AI 接入实践者</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- GSAP for Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'accent': '#0ea5e9', // Sky blue
+                        'accent-secondary': '#8b5cf6', // Violet
+                        'accent-warm': '#ec4899', // Pink
+                        'accent-hover': '#38bdf8',
+                        'bg-base': '#030712', // Obsidian dark
+                        'bg-surface': 'rgba(255, 255, 255, 0.03)',
+                        'bg-surface-hover': 'rgba(255, 255, 255, 0.08)',
+                        'border-dim': 'rgba(255, 255, 255, 0.1)'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans SC', 'system-ui', 'sans-serif']
+                    },
+                    letterSpacing: {
+                        wide: '0.02em'
+                    },
+                    lineHeight: {
+                        relaxed: '1.75'
+                    },
+                    animation: {
+                        'blob': 'blob 15s infinite alternate',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(40px, -60px) scale(1.15)' },
+                            '66%': { transform: 'translate(-30px, 30px) scale(0.85)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+                            '50%': { transform: 'translateY(-20px) rotate(2deg)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --accent: #0ea5e9;
+        }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 1rem;
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 40px -10px rgba(139, 92, 246, 0.3);
+            transform: translateY(-8px);
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #0ea5e9, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .text-gradient-sub {
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(to right, #0ea5e9, #8b5cf6);
+            background-size: 200% auto;
+            transition: all 0.5s ease;
+            border-radius: 9999px !important;
+            border: none !important;
+        }
+        
+        .btn-gradient:hover {
+            background-position: right center;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+            transform: translateY(-2px);
+            color: white !important;
+        }
+        
+        body {
+            background-color: var(--bg-base);
+            color: white;
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            letter-spacing: 0.02em;
+            line-height: 1.75;
+            overflow-x: hidden;
+        }
+
+        /* 统一的过渡效果跑在 CSS */
+        .transition-all-custom {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 项目卡片Hover 特效 */
+        /* project-card changed to use glass-card instead, removed the old CSS */
+
+        .tech-pill {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+            padding: 8px 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #a3a3a3;
+        }
+
+        .tech-pill:hover {
+            border-color: var(--accent);
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .robot-eye {
+            animation: blink 4s infinite;
+            transform-origin: center;
+        }
+        @keyframes blink {
+            0%, 46%, 54%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.1); }
+        }
+        .robot-float {
+            animation: float-bot 4s ease-in-out infinite alternate;
+        }
+        @keyframes float-bot {
+            0% { transform: translateY(0px) rotate(0deg); }
+            100% { transform: translateY(-20px) rotate(2deg); }
+        }
+        .aura-glow {
+            background: radial-gradient(circle at center, rgba(14, 165, 233, 0.4) 0%, transparent 70%);
+        }
+
+        .tech-pill:hover i svg {
+            color: var(--accent);
+        }
+
+        /* 隐藏的滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f0f0f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        /* Initial states for GSAP animations */
+        .gsap-reveal {
+            opacity: 0;
+            visibility: hidden;
+        }
+    </style>
+</head>
+
+<body class="bg-[#030712] text-gray-300 relative overflow-x-hidden selection:bg-accent/30 selection:text-white">
+
+    <!-- 动态极光渐变背景 -->
+    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none mix-blend-screen opacity-60">
+        <div class="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-accent/20 blur-[120px] animate-blob"></div>
+        <div class="absolute top-[20%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-accent-secondary/20 blur-[120px] animate-blob" style="animation-delay: 2s; animation-duration: 18s;"></div>
+        <div class="absolute bottom-[-20%] left-[20%] w-[55vw] h-[55vw] rounded-full bg-accent-warm/15 blur-[120px] animate-blob" style="animation-delay: 4s; animation-duration: 22s;"></div>
+    </div>
+
+    <!-- 导航栏 -->
+    <nav class="fixed w-full top-0 z-50 glass-panel border-b-border-dim transition-all-custom" id="main-nav">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <a href="#" class="text-xl font-bold tracking-widest text-white flex items-center gap-2">
+                <i data-lucide="cpu" class="w-6 h-6 text-accent"></i>
+                赵正海
+            </a>
+            
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex gap-8 text-sm font-medium">
+                <a href="#home" class="hover:text-accent transition-colors text-white uppercase tracking-wider">首 页</a>
+                <a href="#about" class="hover:text-accent transition-colors uppercase tracking-wider">关于我</a>
+                <a href="#projects" class="hover:text-accent transition-colors uppercase tracking-wider">项 目</a>
+                <a href="#contact" class="hover:text-accent transition-colors uppercase tracking-wider">联 系</a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button class="md:hidden text-white hover:text-accent" id="menu-btn">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 首屏 Hero Section -->
+    <section id="home" class="min-h-screen pt-24 pb-12 flex items-center">
+        <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+            
+            <!-- 文字区 -->
+            <div class="order-2 md:order-1 hero-content relative z-10">
+                <div class="mb-4 inline-block px-4 py-1.5 rounded-full border border-white/10 glass-panel text-white text-sm font-medium tracking-wider">
+                    <span class="text-gradient">✨ 创新 × 控制 × AI</span>
+                </div>
+                <h2 class="text-xl text-gray-400 mb-2 font-medium">你好，我是 赵正海</h2>
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-6 tracking-tight drop-shadow-2xl">
+                    让机器人真正 <br />
+                    <span class="text-gradient relative inline-block">
+                        听懂并执行
+                    </span>
+                </h1>
+                <p class="text-lg md:text-xl text-gray-300 mb-10 max-w-lg leading-relaxed mix-blend-plus-lighter">
+                    我专注于机器人控制、AI 接入与视觉识别开发，致力于把数字孪生与大模型算法落地到智能制造与真实工业协同场景中。
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <a href="#projects" class="inline-flex items-center gap-2 btn-gradient text-white px-8 py-3 rounded-full font-semibold transition-all-custom shadow-lg">
+                        查看项目 <i data-lucide="sparkles" class="w-4 h-4 ml-1"></i>
+                    </a>
+                    <a href="#contact" class="inline-flex items-center gap-2 glass-panel text-white px-8 py-3 rounded-full font-semibold transition-all-custom hover:bg-white/10">
+                        联系我
+                    </a>
+                </div>
+                
+                <div class="mt-12 flex gap-6">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="terminal" class="w-5 h-5 text-accent"></i>
+                        <span class="text-sm text-gray-400 font-medium">底层开发</span>
+                    </div>
+                     <div class="flex items-center gap-3">
+                        <i data-lucide="eye" class="w-5 h-5 text-accent"></i>
+                        <span class="text-sm text-gray-400 font-medium">多模态识别</span>
+                    </div>
+                     <div class="flex items-center gap-3">
+                        <i data-lucide="layers" class="w-5 h-5 text-accent"></i>
+                        <span class="text-sm text-gray-400 font-medium">数字孪生</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 玻璃拟态 可爱机器人视觉区 -->
+            <div class="order-1 md:order-2 relative flex justify-center hero-image items-center min-h-[400px] lg:min-h-[500px]">
+                <div class="aura-glow absolute inset-0 z-0 opacity-50 blur-3xl"></div>
+                <div class="relative z-10 robot-float flex flex-col items-center">
+                    
+                    <!-- 机器人头部 -->
+                    <div class="glass-card w-48 h-40 rounded-3xl relative flex items-center justify-center border-t-2 border-l-2 border-white/20 shadow-2xl p-6">
+                        
+                        <!-- 耳机/天线 -->
+                        <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-4 h-8 bg-gradient-to-t from-white/10 to-transparent flex flex-col items-center">
+                            <div class="w-4 h-4 rounded-full bg-accent/80 animate-pulse shadow-[0_0_15px_rgba(14,165,233,0.8)] absolute -top-2"></div>
+                        </div>
+                        <div class="absolute -left-4 top-1/2 -translate-y-1/2 w-6 h-12 glass-panel rounded-r-none rounded-l-full"></div>
+                        <div class="absolute -right-4 top-1/2 -translate-y-1/2 w-6 h-12 glass-panel rounded-l-none rounded-r-full"></div>
+
+                        <!-- 屏幕 面部 -->
+                        <div class="w-full h-full bg-black/40 rounded-2xl border border-white/10 flex items-center justify-between px-6 shadow-inner relative overflow-hidden">
+                            <!-- 反光 -->
+                            <div class="absolute -inset-10 bg-gradient-to-tr from-transparent via-white/10 to-transparent rotate-45 transform -translate-x-full"></div>
+
+                            <!-- 眼睛 -->
+                            <div class="w-6 h-10 rounded-full bg-accent shadow-[0_0_20px_rgba(14,165,233,0.8)] robot-eye"></div>
+                            <div class="w-6 h-10 rounded-full bg-accent shadow-[0_0_20px_rgba(14,165,233,0.8)] robot-eye"></div>
+                            
+                            <!-- 脸红 -->
+                            <div class="absolute bottom-4 left-4 w-6 h-3 bg-pink-500/40 rounded-full blur-[4px]"></div>
+                            <div class="absolute bottom-4 right-4 w-6 h-3 bg-pink-500/40 rounded-full blur-[4px]"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 脖子 -->
+                    <div class="w-8 h-6 bg-white/5 border border-white/10 backdrop-blur-md rounded-lg mt-2 mb-2"></div>
+
+                    <!-- 身体 -->
+                    <div class="glass-card w-40 h-32 rounded-2xl relative flex items-center justify-center border-t border-l border-white/20 shadow-2xl overflow-hidden">
+                        <i data-lucide="heart" class="w-10 h-10 text-pink-500/80 fill-pink-500/20 animate-pulse mt-[-10px] drop-shadow-xl"></i>
+                        <div class="absolute bottom-4 flex gap-2">
+                            <div class="w-4 h-1 bg-green-400/80 rounded-full shadow-[0_0_5px_rgba(74,222,128,0.8)] animate-pulse"></div>
+                            <div class="w-4 h-1 bg-accent/80 rounded-full shadow-[0_0_5px_rgba(14,165,233,0.8)]"></div>
+                            <div class="w-4 h-1 bg-purple-400/80 rounded-full shadow-[0_0_5px_rgba(168,85,247,0.8)]"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 漂浮装饰符号 -->
+                    <div class="absolute -top-10 -right-12 glass-panel p-3 rounded-full text-accent/80 animate-bounce" style="animation-delay: 0.5s;">
+                        <i data-lucide="zap" class="w-6 h-6"></i>
+                    </div>
+                    <div class="absolute top-20 -left-16 glass-panel p-3 rounded-full text-pink-400/80 animate-bounce" style="animation-delay: 1s;">
+                        <i data-lucide="cpu" class="w-6 h-6"></i>
+                    </div>
+                    <div class="absolute -bottom-8 -right-8 glass-panel p-3 rounded-full text-purple-400/80 animate-bounce" style="animation-delay: 1.5s;">
+                        <i data-lucide="code" class="w-6 h-6"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 关于我 -->
+    <section id="about" class="py-24 relative z-10">
+        <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-16 items-start">
+            
+            <!-- 简介 -->
+            <div class="lg:col-span-5 gsap-reveal section-reveal">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-4 h-[2px] bg-accent"></div>
+                    <h3 class="text-accent font-semibold tracking-widest uppercase text-sm">About Me</h3>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">Who Am I</h2>
+                <p class="text-gray-400 leading-relaxed mb-6">
+                    我是一名前沿工业软件与机器人控制开发工程师。我对算法与物理实体世界的结合充满热情，能在复杂的系统中定位瓶颈并完成联调闭环。
+                </p>
+                <p class="text-gray-400 leading-relaxed mb-8">
+                    在过去的几年（2022-2026）里，我跨越了从树莓派 ROS 底层驱动到视觉检测、FOC 控制，再到接入大语言模型的多个智能落地项目。我的核心优势在于<strong class="text-white">能把纯算法侧的能力，切实落地到机械手臂的真实执行链路中</strong>。
+                </p>
+                <a href="#" class="inline-flex items-center gap-2 border-b-2 border-accent text-white pb-1 font-medium hover:text-accent transition-colors group">
+                    下载完整简历 (PDF) 
+                    <i data-lucide="download" class="w-4 h-4 group-hover:-translate-y-1 transition-transform"></i>
+                </a>
+            </div>
+
+            <!-- 技能栈 -->
+            <div class="lg:col-span-7 gsap-reveal section-reveal">
+                <h3 class="text-xl font-semibold text-white mb-8 border-b border-border-dim pb-4">技术储备</h3>
+                
+                <div class="mb-8">
+                    <h4 class="text-sm text-gray-500 mb-4 font-medium uppercase tracking-wider">开发与控制语言</h4>
+                    <div class="flex flex-wrap gap-3">
+                        <span class="tech-pill transition-all-custom cursor-default"><i><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></i> Python (YOLO/LLM)</span>
+                        <span class="tech-pill transition-all-custom cursor-default"><i><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></i> C / C++ / C#</span>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <h4 class="text-sm text-gray-500 mb-4 font-medium uppercase tracking-wider">机器人与系统平台</h4>
+                    <div class="flex flex-wrap gap-3">
+                        <span class="tech-pill transition-all-custom cursor-default"><i><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg></i> ROS / Linux</span>
+                        <span class="tech-pill transition-all-custom cursor-default"><i data-lucide="settings"></i> 发那科 (FANUC) 示教</span>
+                        <span class="tech-pill transition-all-custom cursor-default"><i data-lucide="zap"></i> FOC 控制</span>
+                        <span class="tech-pill transition-all-custom cursor-default"><i data-lucide="cpu"></i> PLC (TIA)</span>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-sm text-gray-500 mb-4 font-medium uppercase tracking-wider">AI、视觉与仿真工具</h4>
+                    <div class="flex flex-wrap gap-3">
+                        <span class="tech-pill transition-all-custom cursor-default"><i data-lucide="video"></i> OpenCV / YOLOv8</span>
+                        <span class="tech-pill transition-all-custom cursor-default"><i data-lucide="brain-circuit"></i> 本地大模型 (Ollama/LangChain)</span>
+                        <span class="tech-pill transition-all-custom cursor-default"><i data-lucide="box"></i> Unity (数字孪生)</span>
+                        <span class="tech-pill transition-all-custom cursor-default"><i data-lucide="pen-tool"></i> SolidWorks / UG</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 精选项目 -->
+    <section id="projects" class="py-24 relative z-10">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16 gsap-reveal section-reveal">
+                <div class="flex items-center justify-center gap-3 mb-4">
+                    <div class="w-4 h-[2px] bg-accent"></div>
+                    <h3 class="text-accent font-semibold tracking-widest uppercase text-sm">My Projects</h3>
+                    <div class="w-4 h-[2px] bg-accent"></div>
+                </div>
+                <h2 class="text-3xl md:text-5xl font-bold text-white">核心研发成果</h2>
+            </div>
+
+            <!-- 项目网格 -->
+            <div class="grid md:grid-cols-2 gap-8 relative z-10">
+                <!-- Project 1 -->
+                <div class="glass-card p-8 transition-all-custom flex flex-col h-full gsap-reveal card-reveal cursor-pointer relative overflow-hidden group" onclick="openElephantModal()">
+                    <div class="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity z-0"></div>
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-accent/10 rounded-sm flex items-center justify-center mb-6 border border-accent/20">
+                            <i data-lucide="bot" class="w-6 h-6 text-accent"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-accent transition-colors">一、大象协作机器人 AI 接入 <i data-lucide="external-link" class="inline-block w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"></i></h3>
+                        <p class="text-xs text-accent font-mono mb-4">2026 所属方向：AI 控制映射 / 树莓派 ROS</p>
+                        <p class="text-gray-400 text-sm leading-relaxed mb-6 flex-grow">
+                            基于树莓派在 Linux 系统的 ROS 环境下，打通自然语言指令到机械执行动作的映射。让传统的工业设备能够“听懂人话”，有效降低了人机交互的认知门槛。难点在于处理口语歧义及稳定联调。
+                        </p>
+                        <div class="flex flex-wrap gap-2 pt-4 border-t border-border-dim">
+                            <span class="text-xs text-gray-400 bg-white/5 border border-white/10 px-2 py-1 rounded-full">ROS</span>
+                            <span class="text-xs text-gray-400 bg-white/5 border border-white/10 px-2 py-1 rounded-full">Linux</span>
+                            <span class="text-xs text-gray-400 bg-white/5 border border-white/10 px-2 py-1 rounded-full">AI 解析</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 2 -->
+                <div class="glass-card p-8 transition-all-custom flex flex-col h-full gsap-reveal card-reveal cursor-pointer relative overflow-hidden group" onclick="openFanucModal()">
+                    <div class="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity z-0"></div>
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-accent/10 rounded-sm flex items-center justify-center mb-6 border border-accent/20">
+                            <i data-lucide="settings" class="w-6 h-6 text-accent"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-accent transition-colors">二、发那科机器人模拟装配电机 <i data-lucide="external-link" class="inline-block w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"></i></h3>
+                        <p class="text-xs text-accent font-mono mb-4">所属方向：实机示教 / 柔性产线</p>
+                        <p class="text-gray-400 text-sm leading-relaxed mb-6 flex-grow">
+                            全程完成了装配电机流程的机器人示教调试。攻克了流程中难度极高的「动态换工具」以及「RFID 标签工位识别」集成。实现高一致性姿态控制和严格工艺节拍保障。
+                        </p>
+                        <div class="flex flex-wrap gap-2 pt-4 border-t border-border-dim">
+                            <span class="text-xs text-gray-400 bg-white/5 border border-white/10 px-2 py-1 rounded-full">FANUC示教</span>
+                            <span class="text-xs text-gray-400 bg-white/5 border border-white/10 px-2 py-1 rounded-full">RFID对接</span>
+                            <span class="text-xs text-gray-400 bg-white/5 border border-white/10 px-2 py-1 rounded-full">工具切换</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 3 -->
+                <div class="glass-card p-8 transition-all-custom flex flex-col h-full gsap-reveal card-reveal cursor-pointer relative overflow-hidden group" onclick="openWheelModal()">
+                    <div class="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity z-0"></div>
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-accent/10 rounded-sm flex items-center justify-center mb-6 border border-accent/20">
+                            <i data-lucide="eye" class="w-6 h-6 text-accent"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-accent transition-colors">三、双轮组协助机器人 <i data-lucide="external-link" class="inline-block w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"></i></h3>
+                        <p class="text-xs text-accent font-mono mb-4">所属方向：边缘模型部署 / YOLO多线并行</p>
+                        <p class="text-gray-400 text-sm leading-relaxed mb-6 flex-grow">
+                            在移动平台上部署本地大模型以决策高层行为，同时运用多行程并行策略实现稳定的底盘 FOC 控制与高帧率 YOLOv8 视觉目标识别。解决控制环与推理环实时的资源抢占瓶颈。
+                        </p>
+                        <div class="flex flex-wrap gap-2 pt-4 border-t border-border-dim">
+                            <span class="text-xs text-gray-400 bg-white/5 border border-white/10 px-2 py-1 rounded-full">YOLOv8</span>
+                            <span class="text-xs text-gray-400 bg-white/5 border border-white/10 px-2 py-1 rounded-full">FOC控制</span>
+                            <span class="text-xs text-gray-400 bg-white/5 border border-white/10 px-2 py-1 rounded-full">本地大模型</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 4 -->
+                <div class="glass-card p-8 transition-all-custom flex flex-col h-full gsap-reveal card-reveal">
+                    <div class="w-12 h-12 bg-accent/10 rounded-sm flex items-center justify-center mb-6 border border-accent/20">
+                        <i data-lucide="layers" class="w-6 h-6 text-accent"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">四、毕设：晶圆抓取系统</h3>
+                    <p class="text-xs text-accent font-mono mb-4">所属方向：数字孪生 / 运动学逆运算 / LLM分析</p>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-6 flex-grow">
+                        从 0 到 1 编写了六轴机械臂底层框架与逆向运动学算法，并在 Unity 里搭建完整产线数字孪生系统。最终实现结合 AI 视觉实时抓取、并调用大语言模型完成晶圆质检报告的语意化分析全流程闭环。
+                    </p>
+                    <div class="flex flex-wrap gap-2 pt-4 border-t border-border-dim">
+                        <span class="text-xs text-gray-400 bg-white/5 border border-white/10 px-2 py-1 rounded-full">数字孪生</span>
+                        <span class="text-xs text-gray-400 bg-white/5 border border-white/10 px-2 py-1 rounded-full">运动学逆解</span>
+                        <span class="text-xs text-gray-400 bg-white/5 border border-white/10 px-2 py-1 rounded-full">晶圆质检</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12 gsap-reveal section-reveal">
+                <a href="#contact" class="inline-flex items-center gap-2 text-white hover:text-accent font-medium transition-colors group">
+                    讨论技术细节 <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 底部协作联系 -->
+    <section id="contact" class="py-24 relative z-10">
+        <div class="max-w-4xl mx-auto px-6 text-center gsap-reveal section-reveal">
+            <h2 class="text-3xl md:text-5xl font-bold text-white mb-6">Let's work together on your next project</h2>
+            <p class="text-gray-400 mb-12 max-w-2xl mx-auto">
+                如果您正在寻找能够将复杂算法扎实对接到物理设备、具备软硬件闭环联调能力的开发工程师，欢迎联系我。期待为智能制造产生真实的价值。
+            </p>
+            
+            <div class="bg-bg-surface p-8 max-w-md mx-auto rounded-md border border-border-dim shadow-xl">
+                <div class="space-y-6">
+                    <div class="flex items-center justify-center gap-4 text-lg">
+                        <i data-lucide="mail" class="w-5 h-5 text-accent"></i>
+                        <span class="font-mono text-gray-300">2640373421@qq.com</span>
+                    </div>
+                    <div class="flex items-center justify-center gap-4 text-lg">
+                        <i data-lucide="smartphone" class="w-5 h-5 text-accent"></i>
+                        <span class="font-mono text-gray-300">191 6340 7522</span>
+                    </div>
+                </div>
+                
+                <div class="mt-8 pt-8 border-t border-border-dim/30">
+                    <a href="mailto:2640373421@qq.com" class="block w-full btn-gradient text-white text-center py-3 rounded-full font-semibold transition-all-custom shadow-lg">
+                        发  送  邮  件
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 大象机器人专属弹窗 (Modal) -->
+    <div id="elephant-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 md:p-8">
+        <!-- 遮罩层 -->
+        <div id="elephant-overlay" class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeElephantModal()"></div>
+        
+        <!-- 内部内容卡片 -->
+        <div id="elephant-content" class="relative bg-bg-surface border border-border-dim w-full max-w-5xl h-[90vh] md:h-auto max-h-[90vh] rounded-md shadow-2xl flex flex-col transform translate-y-8 opacity-0 transition-all duration-300">
+            
+            <!-- Modal 头部 -->
+            <div class="flex justify-between items-center p-5 md:p-6 border-b border-border-dim bg-bg-surface-hover/30 rounded-t-md shrink-0">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="bot" class="w-6 h-6 text-accent"></i>
+                    <h2 class="text-xl md:text-2xl font-bold text-white tracking-widest">大象协作机器人 AI 接入</h2>
+                </div>
+                <button onclick="closeElephantModal()" class="text-gray-400 hover:text-white transition-colors bg-[#111] hover:bg-[#333] p-2 rounded-md focus:outline-none">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <!-- 内容滚动区 -->
+            <div class="p-5 md:p-8 overflow-y-auto flex-1 custom-scrollbar">
+                
+                <!-- 视频展示模块 -->
+                <div class="w-full bg-[#050505] rounded-sm overflow-hidden mb-8 border border-border-dim shadow-inner relative group">
+                    <div class="absolute top-2 left-2 z-10 bg-black/60 px-3 py-1 rounded text-xs text-gray-300 backdrop-blur flex items-center gap-2 border border-[#333]">
+                        <span class="w-2 h-2 rounded-full bg-accent animate-pulse block"></span>
+                        演示视频
+                    </div>
+                    <!-- 确保视频撑满并带控制条 -->
+                    <video id="elephant-video" src="./项目/大象机器人.mp4" controls preload="metadata" class="w-full max-h-[55vh] object-contain outline-none"></video>
+                </div>
+
+                <!-- 文字详述 -->
+                <div class="space-y-8">
+                    <!-- 环节 1: 业务痛点与开发职责 -->
+                    <div>
+                        <h3 class="text-lg text-white font-semibold flex items-center gap-2 mb-4">
+                            <span class="w-1 h-[1em] bg-accent inline-block"></span>
+                            业务痛点与我的工作
+                        </h3>
+                        <div class="text-gray-400 leading-relaxed bg-[#111]/50 p-5 rounded border border-[#222]">
+                            <p class="mb-4">传统工业协作机器人的人机交互门槛极高，强依赖专业示教器输入或预编制程序。本项目旨在打破“机械指令”墙，让没有工程背景的操作员仅需说自然语言，即能指挥协作机器人完成动作流。</p>
+                            <p>在这套系统中，我的核心职责是<strong class="text-gray-200">打通从“自然语言 AI 解析”到“底层机械执行”的全栈映射</strong>。通过树莓派作为控制中枢，在 Linux 系统的 ROS 生态下，完成了指令接收、语义空间理解、目标动作坐标逆解与执行监测的安全闭环开发。</p>
+                        </div>
+                    </div>
+
+                    <!-- 环节 2: 开发路线与难点 -->
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-[#111]/50 p-6 rounded border border-border-dim hover:border-gray-600 transition-colors">
+                            <h4 class="text-white font-bold mb-4 flex items-center gap-2">
+                                <i data-lucide="cpu" class="w-4 h-4 text-accent"></i> 核心技术方案
+                            </h4>
+                            <ul class="text-gray-400 text-sm space-y-3 list-disc list-inside">
+                                <li>运算与驱动中心由 <strong class="text-gray-200">树莓派</strong> 承担，搭载 Linux。</li>
+                                <li>基于 <strong class="text-gray-200">ROS (Robot Operating System)</strong> 构建分布式的消息订阅与动作反馈节点。</li>
+                                <li>打通 AI 语义解析服务，将人类多意图或口语化文本映射为精准的对象化姿态信息。</li>
+                                <li>通过逆解器校验工作空间，进行机械臂最终运动姿态的安全下发。</li>
+                            </ul>
+                        </div>
+                        <div class="bg-[#111]/50 p-6 rounded border border-border-dim hover:border-gray-600 transition-colors">
+                            <h4 class="text-white font-bold mb-4 flex items-center gap-2">
+                                <i data-lucide="target" class="w-4 h-4 text-accent"></i> 难点与技术突破
+                            </h4>
+                            <ul class="text-gray-400 text-sm space-y-3 list-disc list-inside">
+                                <li>面对充满口语化代词和空间模糊映射的指令（如“把那个红色的推过去一点”），设计了<strong class="text-gray-200">上下文关联解析</strong>与对象补全机制。</li>
+                                <li>稳定解决从“非格式文本”转换为“ROS Standard Message”的映射健壮性，排除了脏数据越界。</li>
+                                <li>实机控制的边界条件与平滑度联调：避免因解析错误产生的机械突变干涉与危险运动序列。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal 底部操作 -->
+            <div class="p-5 border-t border-border-dim flex justify-end bg-[#0f0f0f] rounded-b-md shrink-0">
+                <button onclick="closeElephantModal()" class="px-8 py-2 bg-[#222] hover:bg-accent text-gray-300 hover:text-white font-medium rounded-sm border border-[#333] hover:border-accent-hover transition-all focus:outline-none">
+                    关 闭 详 情
+                </button>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- 发那科机械臂专属弹窗 (Modal) -->
+    <div id="fanuc-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 md:p-8">
+        <!-- 遮罩层 -->
+        <div id="fanuc-overlay" class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeFanucModal()"></div>
+        
+        <!-- 内部内容卡片 -->
+        <div id="fanuc-content" class="relative bg-bg-surface border border-border-dim w-full max-w-5xl h-[90vh] md:h-auto max-h-[90vh] rounded-md shadow-2xl flex flex-col transform translate-y-8 opacity-0 transition-all duration-300">
+            
+            <!-- Modal 头部 -->
+            <div class="flex justify-between items-center p-5 md:p-6 border-b border-border-dim bg-bg-surface-hover/30 rounded-t-md shrink-0">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="settings" class="w-6 h-6 text-accent"></i>
+                    <h2 class="text-xl md:text-2xl font-bold text-white tracking-widest">发那科机器人模拟装配电机</h2>
+                </div>
+                <button onclick="closeFanucModal()" class="text-gray-400 hover:text-white transition-colors bg-[#111] hover:bg-[#333] p-2 rounded-md focus:outline-none">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <!-- 内容滚动区 -->
+            <div class="p-5 md:p-8 overflow-y-auto flex-1 custom-scrollbar">
+                
+                <!-- 四图画廊展示区 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <!-- 图片1: 工具快换 -->
+                    <div class="relative group overflow-hidden rounded-sm border border-border-dim bg-black flex justify-center items-center aspect-video">
+                        <div class="absolute bottom-0 left-0 right-0 bg-black/80 px-4 py-3 text-sm text-gray-300 z-10 translate-y-full group-hover:translate-y-0 transition-transform flex flex-col justify-end">
+                            <span class="font-bold text-white mb-1"><span class="text-accent">#01</span> 工具快换模块对接</span>
+                        </div>
+                        <img src="./项目/发那科机械臂换工具.jpg" alt="发那科机械臂换工具" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100 p-2">
+                    </div>
+                    <!-- 图片2: RFID 识别 -->
+                    <div class="relative group overflow-hidden rounded-sm border border-border-dim bg-black flex justify-center items-center aspect-video">
+                        <div class="absolute bottom-0 left-0 right-0 bg-black/80 px-4 py-3 text-sm text-gray-300 z-10 translate-y-full group-hover:translate-y-0 transition-transform flex flex-col justify-end">
+                            <span class="font-bold text-white mb-1"><span class="text-accent">#02</span> RFID工位标签读取</span>
+                        </div>
+                        <img src="./项目/rfid识别.jpg" alt="RFID识别" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100 p-2">
+                    </div>
+                    <!-- 图片3: 大夹爪 -->
+                    <div class="relative group overflow-hidden rounded-sm border border-border-dim bg-black flex justify-center items-center aspect-video">
+                        <div class="absolute bottom-0 left-0 right-0 bg-black/80 px-4 py-3 text-sm text-gray-300 z-10 translate-y-full group-hover:translate-y-0 transition-transform flex flex-col justify-end">
+                            <span class="font-bold text-white mb-1"><span class="text-accent">#03</span> 大夹爪：外壳装配与搬运</span>
+                        </div>
+                        <img src="./项目/大夹爪抓取.jpg" alt="大夹爪抓取" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100 p-2">
+                    </div>
+                    <!-- 图片4: 小夹爪 -->
+                    <div class="relative group overflow-hidden rounded-sm border border-border-dim bg-black flex justify-center items-center aspect-video">
+                        <div class="absolute bottom-0 left-0 right-0 bg-black/80 px-4 py-3 text-sm text-gray-300 z-10 translate-y-full group-hover:translate-y-0 transition-transform flex flex-col justify-end">
+                            <span class="font-bold text-white mb-1"><span class="text-accent">#04</span> 小夹爪：内芯等组件精密对位</span>
+                        </div>
+                        <img src="./项目/小夹爪抓取.jpg" alt="小夹爪抓取" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100 p-2">
+                    </div>
+                </div>
+
+                <!-- 文字详述 -->
+                <div class="space-y-8">
+                    <!-- 环节 1: 业务痛点与开发职责 -->
+                    <div>
+                        <h3 class="text-lg text-white font-semibold flex items-center gap-2 mb-4">
+                            <span class="w-1 h-[1em] bg-accent inline-block"></span>
+                            业务痛点与我的工作
+                        </h3>
+                        <div class="text-gray-400 leading-relaxed bg-[#111]/50 p-5 rounded border border-[#222]">
+                            <p class="mb-4">在现代化柔性电机装配产线中，机械臂不能仅靠单一夹具完成所有任务。不同工序如拿取粗重的电机外壳、再抓取高精度的内核零件，需要机器人在运行途中极其精准地完成<strong class="text-white">“卸下旧工具、校准、装上新工具”</strong>的操作。此外，来料工位的流转需要自动识别，而非人工确认。</p>
+                            <p>我的工作是利用 <strong class="text-gray-200">FANUC 工业系统</strong>，全程规划、示教并调试了包含外壳、定子、转子装配的闭环产线动作。核心是解决多夹爪频繁切换下的坐标系补偿问题和 RFID 信息读取同步问题。</p>
+                        </div>
+                    </div>
+
+                    <!-- 环节 2: 开发路线与难点 -->
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-[#111]/50 p-6 rounded border border-border-dim hover:border-gray-600 transition-colors">
+                            <h4 class="text-white font-bold mb-4 flex items-center gap-2">
+                                <i data-lucide="cpu" class="w-4 h-4 text-accent"></i> 核心技术方案
+                            </h4>
+                            <ul class="text-gray-400 text-sm space-y-3 list-disc list-inside">
+                                <li>通过 <strong class="text-gray-200">FANUC TP 编程与实机示教</strong>，完成电机装配各分解动作的连续轨迹编制。</li>
+                                <li>使用工业总线接入快换法兰机构，设计了多步骤交接防呆逻辑。</li>
+                                <li>配置 <strong class="text-gray-200">RFID 识别读取站点</strong>，机械臂到达特定工位后，触发标签查询程序分支以决定下一步的抓取策略。</li>
+                                <li>多 I/O 点位统筹，监控气路状态确认夹持是否充分。</li>
+                            </ul>
+                        </div>
+                        <div class="bg-[#111]/50 p-6 rounded border border-border-dim hover:border-gray-600 transition-colors">
+                            <h4 class="text-white font-bold mb-4 flex items-center gap-2">
+                                <i data-lucide="target" class="w-4 h-4 text-accent"></i> 难点与技术突破
+                            </h4>
+                            <ul class="text-gray-400 text-sm space-y-3 list-disc list-inside">
+                                <li><strong class="text-gray-200">动态换工具坐标一致性</strong>：大小夹爪的 TCP (Tool Center Point) 不在一个层面，极易在程序切换中引发严重干涉。我重新标定了多个工具坐标系，使得在物理法兰切换时逻辑坐标平滑迁移，保证了定位零摩擦。</li>
+                                <li><strong class="text-gray-200">RFID 高频触发容错</strong>：解决因产线震动或位置偏移导致的偶尔漏读现象，写入重试与定位微调寻址指令。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal 底部操作 -->
+            <div class="p-5 border-t border-border-dim flex justify-end bg-[#0f0f0f] rounded-b-md shrink-0">
+                <button onclick="closeFanucModal()" class="px-8 py-2 bg-[#222] hover:bg-accent text-gray-300 hover:text-white font-medium rounded-sm border border-[#333] hover:border-accent-hover transition-all focus:outline-none">
+                    关 闭 详 情
+                </button>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- 双轮组协助机器人专属弹窗 (Modal) -->
+    <div id="wheel-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 md:p-8">
+        <!-- 遮罩层 -->
+        <div id="wheel-overlay" class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeWheelModal()"></div>
+        
+        <!-- 内部内容卡片 -->
+        <div id="wheel-content" class="relative bg-bg-surface border border-border-dim w-full max-w-5xl h-[90vh] md:h-auto max-h-[90vh] rounded-md shadow-2xl flex flex-col transform translate-y-8 opacity-0 transition-all duration-300">
+            
+            <!-- Modal 头部 -->
+            <div class="flex justify-between items-center p-5 md:p-6 border-b border-border-dim bg-bg-surface-hover/30 rounded-t-md shrink-0">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="eye" class="w-6 h-6 text-accent"></i>
+                    <h2 class="text-xl md:text-2xl font-bold text-white tracking-widest">双轮组协助机器人</h2>
+                </div>
+                <button onclick="closeWheelModal()" class="text-gray-400 hover:text-white transition-colors bg-[#111] hover:bg-[#333] p-2 rounded-md focus:outline-none">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <!-- 内容滚动区 -->
+            <div class="p-5 md:p-8 overflow-y-auto flex-1 custom-scrollbar">
+                
+                <!-- 画廊展示区: 核心组件与动效视频 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <!-- 左侧: 主体结构展示 -->
+                    <div class="relative group overflow-hidden rounded-sm border border-border-dim bg-black flex justify-center items-center h-64 md:h-72">
+                        <div class="absolute bottom-0 left-0 right-0 bg-black/80 px-4 py-3 text-sm text-gray-300 z-10 translate-y-full group-hover:translate-y-0 transition-transform flex flex-col justify-end">
+                            <span class="font-bold text-white mb-1"><span class="text-accent">#01</span> 机器人机身架构（含 3D 打印双轮腿与双 FOC 电机）</span>
+                        </div>
+                        <img src="./项目/机器人主体.jpg" alt="机器人主体" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100 object-center p-2">
+                    </div>
+                    
+                    <!-- 右侧: 控制板 -->
+                    <div class="relative group overflow-hidden rounded-sm border border-border-dim bg-black flex justify-center items-center h-64 md:h-72">
+                        <div class="absolute bottom-0 left-0 right-0 bg-black/80 px-4 py-3 text-sm text-gray-300 z-10 translate-y-full group-hover:translate-y-0 transition-transform">
+                            <span class="font-bold text-white block"><span class="text-accent">#02</span> 定制 FOC 驱动系统主板</span>
+                        </div>
+                        <img src="./项目/机器人主板.jpg" alt="机器人主板" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100 p-2">
+                    </div>
+                </div>
+
+                <!-- 视频展示模块 -->
+                <div class="w-full bg-[#050505] rounded-sm overflow-hidden mb-8 border border-border-dim shadow-inner relative group">
+                    <div class="absolute top-2 left-2 z-10 bg-black/60 px-3 py-1 rounded text-xs text-gray-300 backdrop-blur flex items-center gap-2 border border-[#333]">
+                        <span class="w-2 h-2 rounded-full bg-accent animate-pulse block"></span>
+                        跳跃与平衡调试平台实况
+                    </div>
+                    <!-- 实况视频 -->
+                    <video id="wheel-video" src="./项目/小车跳跃实验.mp4" controls preload="metadata" class="w-full max-h-[55vh] object-contain outline-none"></video>
+                </div>
+
+                <!-- 文字详述 -->
+                <div class="space-y-8">
+                    <!-- 环节 1: 业务痛点与开发职责 -->
+                    <div>
+                        <h3 class="text-lg text-white font-semibold flex items-center gap-2 mb-4">
+                            <span class="w-1 h-[1em] bg-accent inline-block"></span>
+                            需求背景与我的工作
+                        </h3>
+                        <div class="text-gray-400 leading-relaxed bg-[#111]/50 p-5 rounded border border-[#222]">
+                            <p class="mb-4">这是一款能够在复杂工作环境下辅助执行移动与视觉抓取任务的多态移动机器人。其核心挑战在于：<strong class="text-white">如何在一个小型边缘系统内，同时兼顾高频的电机 FOC (磁场定向控制)、AI YOLOv8 视觉推流以及需要极大算力的本地 LLM 大模型推理？</strong></p>
+                            <p>在该项目中，我独立完成了底层基于 <strong class="text-gray-200">ESP32 搭配 L6234D 驱动的 FOC 硬件板卡</strong> 开发与调参，并通过多线程的调度策略，成功攻克了控制核心与上层大模型 AI 与 YOLO 视觉识别联调时的系统资源抢占难题。</p>
+                        </div>
+                    </div>
+
+                    <!-- 环节 2: 开发路线与难点 -->
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-[#111]/50 p-6 rounded border border-border-dim hover:border-gray-600 transition-colors">
+                            <h4 class="text-white font-bold mb-4 flex items-center gap-2">
+                                <i data-lucide="cpu" class="w-4 h-4 text-accent"></i> 核心技术构架
+                            </h4>
+                            <ul class="text-gray-400 text-sm space-y-3 list-disc list-inside">
+                                <li>硬件拓扑：主控采用 <strong class="text-gray-200">ESP32-WROOM-32</strong>（如图），下挂两路 ST L6234D 三相全桥驱动单元控制双轮 BLDC 无刷电机。</li>
+                                <li>AI 视觉层：采用 <strong class="text-gray-200">YOLOv8</strong> 高帧率抓取相机流信息，完成人员、障碍物和作业目标的分割。</li>
+                                <li>高层认知：通过本地化部署大语言模型，赋予机器人基础的语意认知、目标决策功能。</li>
+                            </ul>
+                        </div>
+                        <div class="bg-[#111]/50 p-6 rounded border border-border-dim hover:border-gray-600 transition-colors">
+                            <h4 class="text-white font-bold mb-4 flex items-center gap-2">
+                                <i data-lucide="target" class="w-4 h-4 text-accent"></i> 时延与并行突破
+                            </h4>
+                            <ul class="text-gray-400 text-sm space-y-3 list-disc list-inside">
+                                <li><strong class="text-gray-200">多线并发防堵塞</strong>：FOC 是微秒级实时任务，受阻会导致电机震抖；YOLO 与 LLM 则是计算密集型“长耗时”任务。我通过合理的物理隔离（下位机进行运动控制，上位机处理 AI 模型）与缓存队列，分离了感知、决策与执行的时钟周期。</li>
+                                <li><strong class="text-gray-200">视觉联动闭环时延</strong>：优化了从 YOLO 捕捉到目标 -> LLM 产出决策 -> ESP32 执行制动闭环的过程延迟。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal 底部操作 -->
+            <div class="p-5 border-t border-border-dim flex justify-end bg-[#0f0f0f] rounded-b-md shrink-0">
+                <button onclick="closeWheelModal()" class="px-8 py-2 bg-[#222] hover:bg-accent text-gray-300 hover:text-white font-medium rounded-sm border border-[#333] hover:border-accent-hover transition-all focus:outline-none">
+                    关 闭 详 情
+                </button>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- 热爱与视界 Section -->
+    <section id="hobbies" class="py-24 relative z-10">
+        <div class="max-w-7xl mx-auto px-6 relative">
+            <div class="mb-16 md:w-3/5">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-4 h-[2px] bg-accent"></div>
+                    <h3 class="text-accent font-semibold tracking-widest uppercase text-sm">Life & Vision</h3>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">我的另一面</h2>
+                <p class="text-gray-400 leading-relaxed font-light">代码和算法之外，我是一个充满好奇心与生活热情的人。我相信健康的体魄和对前沿技术的敏锐嗅觉，是支撑长线创造力的基石。</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 运动爱好 Card -->
+                <div class="group glass-card p-8 transition-colors duration-300 relative overflow-hidden">
+                    <div class="absolute -right-6 -top-6 text-white/5 group-hover:text-accent/10 transition-colors duration-500">
+                        <i data-lucide="dribbble" class="w-48 h-48"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-accent/10 border border-accent/20 rounded flex items-center justify-center text-accent mb-6">
+                            <i data-lucide="activity" class="w-6 h-6"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-white mb-4">热爱竞技与汗水</h4>
+                        <p class="text-gray-400 leading-relaxed">
+                            生活里我极度迷恋在重力下对抗与协作的运动。平时我最常出现在<strong class="text-gray-200">篮球场</strong>和<strong class="text-gray-200">羽毛球馆</strong>。运动不仅能帮我在高强度的工业软件开发中释放压力，更让我明白什么是真实的团队协作、预判走位和逆风抗压的韧性。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- AI 视界 Card -->
+                <div class="group glass-card p-8 transition-colors duration-300 relative overflow-hidden">
+                    <div class="absolute -right-6 -top-6 text-white/5 group-hover:text-accent/10 transition-colors duration-500">
+                        <i data-lucide="sparkles" class="w-48 h-48"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-accent/10 border border-accent/20 rounded flex items-center justify-center text-accent mb-6">
+                            <i data-lucide="bot" class="w-6 h-6"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-white mb-4">全面拥抱 AI 浪潮</h4>
+                        <p class="text-gray-400 leading-relaxed mb-4">
+                            我是一名坚定的 <strong class="text-gray-200">AI 乐观主义者</strong>。我没有技术焦虑，而是把大模型视为肢体与大脑的延伸。在日常开发与生活中，我：
+                        </p>
+                        <ul class="text-sm text-gray-500 space-y-2 list-none">
+                            <li class="flex items-start gap-2">
+                                <i data-lucide="check" class="w-4 h-4 text-accent shrink-0 mt-0.5"></i>
+                                <span>熟练运用 Cursor、Copilot 辅助重构与定位代码 bug；</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i data-lucide="check" class="w-4 h-4 text-accent shrink-0 mt-0.5"></i>
+                                <span>长期追踪并深度使用 ChatGPT、Claude 等顶级推理模型；</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i data-lucide="check" class="w-4 h-4 text-accent shrink-0 mt-0.5"></i>
+                                <span>擅长把 AI API (如语言识别、视觉识别) 无缝封装到真实的机器人链路中。</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="py-8 relative z-10">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2 text-accent">
+                <i data-lucide="cpu" class="w-5 h-5"></i>
+                <span class="font-bold text-white">赵正海</span>
+            </div>
+            <p class="text-gray-500 text-sm">© 2026 赵正海 技术作品集. Industrial AI & Robotics.</p>
+            <div class="flex items-center gap-4 text-gray-500">
+                <a href="#" class="hover:text-accent transition-colors"><i data-lucide="github" class="w-5 h-5"></i></a>
+                <a href="#" class="hover:text-accent transition-colors"><i data-lucide="linkedin" class="w-5 h-5"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Init Scripts -->
+    <script>
+        // 初始化 Icons
+        lucide.createIcons();
+
+        // 导航栏滚动逻辑
+        const nav = document.getElementById('main-nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                nav.classList.add('shadow-lg', 'bg-[#030712]/95');
+                nav.classList.remove('bg-transparent', 'border-transparent');
+            } else {
+                nav.classList.remove('shadow-lg', 'bg-[#030712]/95');
+                nav.classList.add('bg-transparent', 'border-transparent');
+            }
+        });
+
+        // 注册 GSAP ScrollTrigger
+        gsap.registerPlugin(ScrollTrigger);
+
+        /* ---------------------------
+         * 大象机器人项目: 弹窗控制逻辑
+         * --------------------------- */
+        function openElephantModal() {
+            const modal = document.getElementById('elephant-modal');
+            const overlay = document.getElementById('elephant-overlay');
+            const content = document.getElementById('elephant-content');
+            
+            // 显示外层容器 (先取消 hidden)
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // 为了让动画生效，使用极短延时
+            setTimeout(() => {
+                // 遮罩淡入
+                overlay.classList.remove('opacity-0');
+                overlay.classList.add('opacity-100');
+                
+                // 内容卡淡入并滑上
+                content.classList.remove('opacity-0', 'translate-y-8');
+                content.classList.add('opacity-100', 'translate-y-0');
+            }, 10);
+            
+            // 锁定 body 滚动
+            document.body.style.overflow = 'hidden';
+            
+            // 如果希望模态框打开就播，取消注释下面两行
+            // const video = document.getElementById('elephant-video');
+            // if (video) video.play();
+        }
+        
+        function closeElephantModal() {
+            const modal = document.getElementById('elephant-modal');
+            const overlay = document.getElementById('elephant-overlay');
+            const content = document.getElementById('elephant-content');
+            const video = document.getElementById('elephant-video');
+            
+            // 暂停视频播放以节省资源
+            if (video) video.pause();
+            
+            // 开始退出动画
+            overlay.classList.remove('opacity-100');
+            overlay.classList.add('opacity-0');
+            
+            content.classList.remove('opacity-100', 'translate-y-0');
+            content.classList.add('opacity-0', 'translate-y-8');
+            
+            // 等待动画（约300ms过渡）结束后再 hide 容器
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                
+                // 恢复 body 滚动
+                document.body.style.overflow = '';
+            }, 300);
+        }
+
+        /* ---------------------------
+         * 发那科机械臂项目: 弹窗控制逻辑
+         * --------------------------- */
+        function openFanucModal() {
+            const modal = document.getElementById('fanuc-modal');
+            const overlay = document.getElementById('fanuc-overlay');
+            const content = document.getElementById('fanuc-content');
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                overlay.classList.add('opacity-100');
+                
+                content.classList.remove('opacity-0', 'translate-y-8');
+                content.classList.add('opacity-100', 'translate-y-0');
+            }, 10);
+            
+            document.body.style.overflow = 'hidden';
+            // 手动触发图标重绘
+            if(window.lucide) { lucide.createIcons(); }
+        }
+        
+        function closeFanucModal() {
+            const modal = document.getElementById('fanuc-modal');
+            const overlay = document.getElementById('fanuc-overlay');
+            const content = document.getElementById('fanuc-content');
+            
+            overlay.classList.remove('opacity-100');
+            overlay.classList.add('opacity-0');
+            
+            content.classList.remove('opacity-100', 'translate-y-0');
+            content.classList.add('opacity-0', 'translate-y-8');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
+            }, 300);
+        }
+
+        /* ---------------------------
+         * 双轮组机器项目: 弹窗控制逻辑
+         * --------------------------- */
+        function openWheelModal() {
+            const modal = document.getElementById('wheel-modal');
+            const overlay = document.getElementById('wheel-overlay');
+            const content = document.getElementById('wheel-content');
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                overlay.classList.add('opacity-100');
+                
+                content.classList.remove('opacity-0', 'translate-y-8');
+                content.classList.add('opacity-100', 'translate-y-0');
+            }, 10);
+            
+            document.body.style.overflow = 'hidden';
+            if(window.lucide) { lucide.createIcons(); }
+        }
+        
+        function closeWheelModal() {
+            const modal = document.getElementById('wheel-modal');
+            const overlay = document.getElementById('wheel-overlay');
+            const content = document.getElementById('wheel-content');
+            const video = document.getElementById('wheel-video');
+            
+            overlay.classList.remove('opacity-100');
+            overlay.classList.add('opacity-0');
+            
+            content.classList.remove('opacity-100', 'translate-y-0');
+            content.classList.add('opacity-0', 'translate-y-8');
+            
+            if(video) {
+                video.pause();
+            }
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
+            }, 300);
+        }
+
+        // Hero 进场动画
+        const tl = gsap.timeline();
+        
+        // 让元素初始隐藏
+        gsap.set('.hero-content > *', { y: 20, opacity: 0 });
+        gsap.set('.hero-image', { opacity: 0, scale: 0.95 });
+
+        tl.to('.hero-content > *', {
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: 'power3.out',
+            delay: 0.2
+        })
+        .to('.hero-image', {
+            opacity: 1,
+            scale: 1,
+            duration: 1,
+            ease: 'power2.out'
+        }, "-=0.6");
+
+        // 滚动显示动画 (L2 Level)
+        const revealElements = document.querySelectorAll('.gsap-reveal');
+        
+        gsap.set(revealElements, { autoAlpha: 1 }); // 移除初始的 hidden 保护
+
+        revealElements.forEach((el) => {
+            // 如果是卡片群组，给一点轻微的交错效果 (依靠类名区分)
+            if (el.classList.contains('card-reveal')) {
+                gsap.fromTo(el, 
+                    { y: 40, opacity: 0 },
+                    {
+                        scrollTrigger: {
+                            trigger: el,
+                            start: "top 85%", // 视口底部以上15%处触发
+                            toggleActions: "play none none none"
+                        },
+                        y: 0,
+                        opacity: 1,
+                        duration: 0.7,
+                        ease: "power2.out"
+                    }
+                );
+            } else {
+                // 普通 Section Reveal
+                gsap.fromTo(el, 
+                    { y: 30, opacity: 0 },
+                    {
+                        scrollTrigger: {
+                            trigger: el,
+                            start: "top 80%"
+                        },
+                        y: 0,
+                        opacity: 1,
+                        duration: 0.8,
+                        ease: "power2.out"
+                    }
+                );
+            }
+        });
+
+    </script>
+</body>
+</html>
